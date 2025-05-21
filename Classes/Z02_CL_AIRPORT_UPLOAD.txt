@@ -1,0 +1,71 @@
+CLASS z02_cl_airport_upload DEFINITION PUBLIC FINAL CREATE PUBLIC.
+  PUBLIC SECTION.
+    CLASS-METHODS:
+      upload_airports IMPORTING iv_file TYPE string.
+ENDCLASS.
+
+CLASS z02_cl_airport_upload IMPLEMENTATION.
+  METHOD upload_airports.
+    DATA: lt_csv_data  TYPE string_table,
+          lt_airports  TYPE TABLE OF z02_airports,
+          lt_fields    TYPE TABLE OF string,
+          lv_line      TYPE string,
+          lv_field     TYPE string,
+          lv_count     TYPE i,
+          lv_skipped   TYPE i.
+
+    " Read CSV
+    cl_gui_frontend_services=>gui_upload(
+      EXPORTING filename = iv_file
+      CHANGING  data_tab = lt_csv_data ).
+
+    " Proccess data
+    LOOP AT lt_csv_data INTO lv_line.
+      REPLACE ALL OCCURRENCES OF '"' IN lv_line WITH ''.
+      REPLACE ALL OCCURRENCES OF '\N' IN lv_line WITH ''.
+      CONDENSE lv_line.
+
+      SPLIT lv_line AT ',' INTO TABLE lt_fields.
+
+      DESCRIBE TABLE lt_fields LINES DATA(lv_field_count).
+      IF lv_field_count >= 14.
+        TRY.
+            DATA ls_airport TYPE z02_airports.
+
+            " Assign fields
+            READ TABLE lt_fields INDEX 1 INTO ls_airport-id.
+            READ TABLE lt_fields INDEX 2 INTO ls_airport-name.
+            READ TABLE lt_fields INDEX 3 INTO ls_airport-city.
+            READ TABLE lt_fields INDEX 4 INTO ls_airport-country.
+            READ TABLE lt_fields INDEX 5 INTO ls_airport-iata.
+            READ TABLE lt_fields INDEX 6 INTO ls_airport-icao.
+            READ TABLE lt_fields INDEX 7 INTO ls_airport-latitude.
+            READ TABLE lt_fields INDEX 8 INTO ls_airport-longitude.
+            READ TABLE lt_fields INDEX 9 INTO ls_airport-altitude.
+            READ TABLE lt_fields INDEX 10 INTO ls_airport-tz.
+            READ TABLE lt_fields INDEX 11 INTO ls_airport-dst.
+            READ TABLE lt_fields INDEX 12 INTO ls_airport-tz_db.
+            READ TABLE lt_fields INDEX 13 INTO ls_airport-airport_type.
+            READ TABLE lt_fields INDEX 14 INTO ls_airport-source.
+
+            APPEND ls_airport TO lt_airports.
+            lv_count = lv_count + 1.
+
+          CATCH cx_root.
+            lv_skipped = lv_skipped + 1.
+        ENDTRY.
+      ELSE.
+        lv_skipped = lv_skipped + 1.
+      ENDIF.
+    ENDLOOP.
+
+    " Write to DB
+    IF lt_airports IS NOT INITIAL.
+      MODIFY z02_airports FROM TABLE lt_airports.
+      COMMIT WORK.
+      MESSAGE |{ lv_count } Datensätze importiert ({ lv_skipped } Zeilen übersprungen)| TYPE 'S'.
+    ELSE.
+      MESSAGE 'Keine gültigen Daten gefunden' TYPE 'E'.
+    ENDIF.
+  ENDMETHOD.
+ENDCLASS.

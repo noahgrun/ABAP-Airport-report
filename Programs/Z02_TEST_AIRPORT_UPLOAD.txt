@@ -1,0 +1,7 @@
+REPORT z02_test_airport_upload.
+
+PARAMETERS: p_file TYPE string LOWER CASE OBLIGATORY
+            DEFAULT 'C:\temp\airports.csv'.  " My path - adjust if you have a different one.
+
+START-OF-SELECTION.
+  z02_cl_airport_upload=>upload_airports( p_file ).

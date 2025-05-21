@@ -1,0 +1,23 @@
+@EndUserText.label : 'Task3 - Airports'
+@AbapCatalog.enhancementCategory : #NOT_EXTENSIBLE
+@AbapCatalog.tableCategory : #TRANSPARENT
+@AbapCatalog.deliveryClass : #A
+@AbapCatalog.dataMaintenance : #RESTRICTED
+define table z02_airports {
+  key client   : abap.clnt not null;
+  key id       : abap.char(10) not null;
+  name         : abap.char(100);
+  city         : abap.char(50);
+  country      : abap.char(50);
+  iata         : abap.char(3);
+  icao         : abap.char(4);
+  latitude     : abap.char(20);
+  longitude    : abap.char(20);
+  altitude     : abap.char(10);
+  tz           : abap.char(10);
+  dst          : abap.char(1);
+  tz_db        : abap.char(50);
+  airport_type : abap.char(20);
+  source       : abap.char(50);
+
+}

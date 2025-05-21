@@ -1,0 +1,79 @@
+REPORT z02_airport_display.
+
+TABLES: z02_airports.
+
+PARAMETERS: p_city  TYPE z02_airports-city,
+            p_iata  TYPE z02_airports-iata,
+            p_ctry  TYPE z02_airports-country.
+PARAMETERS: p_alv AS CHECKBOX DEFAULT 'X'.
+
+DATA: lt_airports TYPE STANDARD TABLE OF z02_airports,
+      lo_alv      TYPE REF TO cl_salv_table.
+
+START-OF-SELECTION.
+  " Input to uppercase
+  DATA(lv_city) = p_city.
+  DATA(lv_iata) = p_iata.
+  DATA(lv_ctry) = p_ctry.
+  TRANSLATE: lv_city TO UPPER CASE,
+             lv_iata TO UPPER CASE,
+             lv_ctry TO UPPER CASE.
+
+  " Load all Data
+  SELECT *
+    FROM z02_airports
+    INTO TABLE @lt_airports.
+
+  " Filter data
+  LOOP AT lt_airports ASSIGNING FIELD-SYMBOL(<fs_airport>).
+    DATA(lv_city_db) = <fs_airport>-city.
+    DATA(lv_iata_db) = <fs_airport>-iata.
+    DATA(lv_ctry_db) = <fs_airport>-country.
+    TRANSLATE: lv_city_db TO UPPER CASE,
+               lv_iata_db TO UPPER CASE,
+               lv_ctry_db TO UPPER CASE.
+
+    IF NOT ( ( p_city = '' OR lv_city_db = lv_city ) AND
+            ( p_iata = '' OR lv_iata_db = lv_iata ) AND
+            ( p_ctry = '' OR lv_ctry_db = lv_ctry ) ).
+      DELETE lt_airports.
+    ENDIF.
+  ENDLOOP.
+
+  " Output
+  IF p_alv = abap_true.
+      " ALV-Output
+      TRY.
+        cl_salv_table=>factory(
+          IMPORTING
+            r_salv_table = lo_alv
+          CHANGING
+            t_table      = lt_airports ).
+
+        lo_alv->get_functions( )->set_all( abap_true ).
+        lo_alv->display( ).
+      CATCH cx_salv_msg.
+        MESSAGE 'ALV konnte nicht angezeigt werden' TYPE 'E'.
+    ENDTRY.
+  ELSE.
+    " Classic List
+    FORMAT COLOR COL_HEADING.
+    WRITE: / 'ID', AT 10 'Flughafen', AT 40 'Stadt', AT 60 'Land', AT 75 'IATA', AT 85 'ICAO', AT 95 'Latitude', AT 115 'Longitude', AT 135 'Flughafentyp'.
+    ULINE.
+
+    FORMAT COLOR COL_NORMAL.
+    LOOP AT lt_airports ASSIGNING <fs_airport>.
+      WRITE: / <fs_airport>-id,
+               AT 10 <fs_airport>-name,
+               AT 40 <fs_airport>-city,
+               AT 60 <fs_airport>-country,
+               AT 75 <fs_airport>-iata,
+               AT 85 <fs_airport>-icao,
+               AT 95 <fs_airport>-latitude,
+               AT 115 <fs_airport>-longitude,
+               AT 135 <fs_airport>-airport_type.
+    ENDLOOP.
+
+    SKIP.
+    WRITE: / 'Treffer:', lines( lt_airports ).
+  ENDIF.
