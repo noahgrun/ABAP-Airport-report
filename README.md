@@ -1,11 +1,10 @@
-# SAP ABAP Task - Flughäfen
+# ABAP Project: Airport Management
+A small study project that was implemented as part of the "SAP Development" module at the BFH.
 
-# ABAP-Projekt: Flughafenverwaltung
-
-## 🛫 Aufgabe
-Erstellen einer ABAP-Applikation zum **Laden**, **Speichern** und **Anzeigen** von Flughafendaten basierend auf folgenden Daten:
+## 🛫 Task
+Create an ABAP application to load, store, and display airport data based on the following data source:
 > [airports.dat](https://raw.githubusercontent.com/jpatokal/openflights/master/data/airports.dat)
 
 
-## Aufbau der Lösung
-![Komponenten-Diagramm](/img/component-diagram.jpg)
+## Solution Structure
+![Components diagram](/img/component-diagram.jpg)
